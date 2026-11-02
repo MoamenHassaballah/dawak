@@ -6,4 +6,6 @@ class AppColors {
   static Color accent2 = Color(0xFF3B9173);
   static Color grey = Color(0xFF6C8A93);
   static Color background = Color(0xFFEDF4F6);
+  static Color decoration = Color(0x404DB692);
+  static Color stroke = Color(0x406C8A93);
 }

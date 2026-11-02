@@ -12,6 +12,7 @@ class AppText extends StatelessWidget {
   final Color? color;
 
   final bool? translate;
+  final int? maxLines;
 
   const AppText({
     super.key,
@@ -20,6 +21,7 @@ class AppText extends StatelessWidget {
     this.color,
     this.textAlign = TextAlign.start,
     this.translate = true,
+    this.maxLines,
   });
 
   @override
@@ -34,6 +36,7 @@ class AppText extends StatelessWidget {
         color: color ?? AppColors.primary,
       ),
       textAlign: textAlign,
+      maxLines: maxLines,
     );
   }
 }

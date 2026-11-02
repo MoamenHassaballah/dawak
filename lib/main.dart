@@ -1,4 +1,5 @@
 import 'package:dawak/splash_screen.dart';
+import 'package:dawak/views/constants/app_colors.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +44,7 @@ class MyApp extends StatelessWidget {
         colorScheme: .fromSeed(
           seedColor: Color(int.parse('0xFF00475D')),
           secondary: Color(int.parse('0xFF4DB692')),
-        ),
+        ).copyWith(surface: AppColors.background),
       ),
       themeMode: .light,
       localizationsDelegates: context.localizationDelegates,

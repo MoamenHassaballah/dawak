@@ -1,3 +1,5 @@
+import 'package:dawak/extensions/context_ext.dart';
+import 'package:dawak/views/authentication/signup_account_selection.dart';
 import 'package:dawak/views/constants/app_colors.dart';
 import 'package:dawak/views/constants/app_text_constants.dart';
 import 'package:dawak/views/widgets/app_text.dart';
@@ -30,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 children: [
                   Image.asset('assets/icon/logo.png', width: 100, height: 100),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Text(
                     "Dawak",
                     style: AppTextConstants.headingStyle.copyWith(
@@ -50,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     textAlign: .center,
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 40),
 
                   AppText(
                     text: "welcomeBack",
@@ -58,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   AppText(text: "loginToContinue", color: AppColors.grey),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 24),
 
                   TextField(
                     controller: emailController,
@@ -96,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTapOutside: (event) => FocusScope.of(context).unfocus(),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: passwordController,
                     obscureText: _isSecured,
@@ -146,14 +148,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTapOutside: (event) => FocusScope.of(context).unfocus(),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
 
                   TextButton(
                     onPressed: () {},
                     style: TextButton.styleFrom(alignment: .centerEnd),
                     child: AppText(text: "forgotPassword"),
                   ),
-
+                  const SizedBox(height: 32),
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
@@ -173,17 +175,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     spacing: 10,
                     children: [
                       AppText(text: "dontHaveAccount"),
-                      AppText(
-                        text: "createNewAccount",
-                        style: AppTextConstants.bodyStyle.copyWith(
-                          fontWeight: .w600,
+                      InkWell(
+                        onTap: () {
+                          context.push(SignupAccountSelection());
+                        },
+                        child: AppText(
+                          text: "createNewAccount",
+                          style: AppTextConstants.bodyStyle.copyWith(
+                            fontWeight: .w600,
+                          ),
                         ),
                       ),
                     ],
