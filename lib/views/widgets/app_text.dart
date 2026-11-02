@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class AppText extends StatelessWidget {
   final String text;
 
-  final TextStyle? style;
+  late TextStyle? style;
   final TextAlign? textAlign;
 
   final Color? color;
@@ -14,10 +14,10 @@ class AppText extends StatelessWidget {
   final bool? translate;
   final int? maxLines;
 
-  const AppText({
+  AppText({
     super.key,
     required this.text,
-    this.style = AppTextConstants.bodyStyle,
+    this.style,
     this.color,
     this.textAlign = TextAlign.start,
     this.translate = true,
@@ -26,6 +26,7 @@ class AppText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    style ??= AppTextConstants.bodyStyle(context);
     return Text(
       translate! ? context.tr(text) : text,
       style: style?.copyWith(

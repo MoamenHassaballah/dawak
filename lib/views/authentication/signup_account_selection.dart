@@ -1,4 +1,5 @@
 import 'package:dawak/extensions/context_ext.dart';
+import 'package:dawak/views/authentication/patient_signup_screen.dart';
 import 'package:dawak/views/constants/app_colors.dart';
 import 'package:dawak/views/constants/app_text_constants.dart';
 import 'package:dawak/views/widgets/app_text.dart';
@@ -38,7 +39,7 @@ class SignupAccountSelection extends StatelessWidget {
                   children: [
                     Text(
                       "Dawak",
-                      style: AppTextConstants.headingStyle.copyWith(
+                      style: AppTextConstants.headingStyle(context).copyWith(
                         fontSize: 40,
                         fontFamily: 'Poppins',
                         color: AppColors.primary,
@@ -49,7 +50,7 @@ class SignupAccountSelection extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         "دواك",
-                        style: AppTextConstants.headingStyle.copyWith(
+                        style: AppTextConstants.headingStyle(context).copyWith(
                           fontSize: 40,
                           fontFamily: 'Tajawal',
                           color: AppColors.primary,
@@ -74,44 +75,51 @@ class SignupAccountSelection extends StatelessWidget {
                     children: [
                       AppText(
                         text: "welcomeToDawak",
-                        style: AppTextConstants.subheadingStyle,
+                        style: AppTextConstants.subheadingStyle(context),
                       ),
                       const SizedBox(height: 12),
                       AppText(text: "chooseAccountType", color: AppColors.grey),
                       const SizedBox(height: 24),
 
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: AppColors.stroke),
-                        ),
-                        padding: EdgeInsets.all(24),
-                        child: Row(
-                          spacing: 24,
-                          children: [
-                            Image.asset("assets/images/user.png", width: 69),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: .start,
-                                children: [
-                                  AppText(
-                                    text: "patient",
-                                    style: AppTextConstants.subheadingStyle,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  AppText(
-                                    text: "patientDesc",
-                                    color: AppColors.grey,
-                                    style: AppTextConstants.bodyStyle.copyWith(
-                                      fontSize: 15,
+                      InkWell(
+                        onTap: () {
+                          context.push(PatientSignupScreen());
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(color: AppColors.stroke),
+                          ),
+                          padding: EdgeInsets.all(24),
+                          child: Row(
+                            spacing: 24,
+                            children: [
+                              Image.asset("assets/images/user.png", width: 69),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: .start,
+                                  children: [
+                                    AppText(
+                                      text: "patient",
+                                      style: AppTextConstants.subheadingStyle(
+                                        context,
+                                      ),
                                     ),
-                                    maxLines: 2,
-                                  ),
-                                ],
+                                    const SizedBox(height: 8),
+                                    AppText(
+                                      text: "patientDesc",
+                                      color: AppColors.grey,
+                                      style: AppTextConstants.bodyStyle(
+                                        context,
+                                      ).copyWith(fontSize: 15),
+                                      maxLines: 2,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
 
@@ -137,15 +145,17 @@ class SignupAccountSelection extends StatelessWidget {
                                 children: [
                                   AppText(
                                     text: "pharmacy",
-                                    style: AppTextConstants.subheadingStyle,
+                                    style: AppTextConstants.subheadingStyle(
+                                      context,
+                                    ),
                                   ),
                                   const SizedBox(height: 8),
                                   AppText(
                                     text: "pharmacyDesc",
                                     color: AppColors.grey,
-                                    style: AppTextConstants.bodyStyle.copyWith(
-                                      fontSize: 15,
-                                    ),
+                                    style: AppTextConstants.bodyStyle(
+                                      context,
+                                    ).copyWith(fontSize: 15),
                                     maxLines: 2,
                                   ),
                                 ],
@@ -168,9 +178,9 @@ class SignupAccountSelection extends StatelessWidget {
                             },
                             child: AppText(
                               text: "login",
-                              style: AppTextConstants.bodyStyle.copyWith(
-                                fontWeight: .w600,
-                              ),
+                              style: AppTextConstants.bodyStyle(
+                                context,
+                              ).copyWith(fontWeight: .w600),
                             ),
                           ),
                         ],

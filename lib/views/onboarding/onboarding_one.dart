@@ -73,7 +73,9 @@ class _OnboardingOneState extends State<OnboardingOne>
               },
               child: AppText(
                 text: "onboarding1Title",
-                style: AppTextConstants.subheadingStyle.copyWith(fontSize: 20),
+                style: AppTextConstants.subheadingStyle(
+                  context,
+                ).copyWith(fontSize: 20),
               ),
             ),
             const SizedBox(height: 10),
@@ -87,7 +89,9 @@ class _OnboardingOneState extends State<OnboardingOne>
               },
               child: AppText(
                 text: "onboarding1Subtitle",
-                style: AppTextConstants.bodyStyle.copyWith(fontSize: 16),
+                style: AppTextConstants.bodyStyle(
+                  context,
+                ).copyWith(fontSize: 16),
                 color: AppColors.grey,
                 textAlign: TextAlign.center,
               ),

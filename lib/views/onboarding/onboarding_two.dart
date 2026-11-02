@@ -73,7 +73,9 @@ class _OnboardingTwoState extends State<OnboardingTwo>
               },
               child: AppText(
                 text: "onboarding2Title",
-                style: AppTextConstants.subheadingStyle.copyWith(fontSize: 20),
+                style: AppTextConstants.subheadingStyle(
+                  context,
+                ).copyWith(fontSize: 20),
               ),
             ),
 
@@ -89,7 +91,9 @@ class _OnboardingTwoState extends State<OnboardingTwo>
               },
               child: AppText(
                 text: "onboarding2Subtitle",
-                style: AppTextConstants.bodyStyle.copyWith(fontSize: 16),
+                style: AppTextConstants.bodyStyle(
+                  context,
+                ).copyWith(fontSize: 16),
                 color: AppColors.grey,
                 textAlign: TextAlign.center,
               ),

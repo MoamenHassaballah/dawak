@@ -2,6 +2,7 @@ import 'package:dawak/extensions/context_ext.dart';
 import 'package:dawak/views/authentication/signup_account_selection.dart';
 import 'package:dawak/views/constants/app_colors.dart';
 import 'package:dawak/views/constants/app_text_constants.dart';
+import 'package:dawak/views/guest/guest_main_page.dart';
 import 'package:dawak/views/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 
@@ -31,11 +32,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
 
                 children: [
-                  Image.asset('assets/icon/logo.png', width: 100, height: 100),
+                  Image.asset(
+                    'assets/icon/logo_shadow.png',
+                    width: 100,
+                    height: 100,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     "Dawak",
-                    style: AppTextConstants.headingStyle.copyWith(
+                    style: AppTextConstants.headingStyle(context).copyWith(
                       fontSize: 40,
                       fontFamily: 'Poppins',
                       color: AppColors.primary,
@@ -44,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   Text(
                     "دواك",
-                    style: AppTextConstants.headingStyle.copyWith(
+                    style: AppTextConstants.headingStyle(context).copyWith(
                       fontSize: 40,
                       fontFamily: 'Tajawal',
                       color: AppColors.primary,
@@ -56,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   AppText(
                     text: "welcomeBack",
-                    style: AppTextConstants.subheadingStyle,
+                    style: AppTextConstants.subheadingStyle(context),
                   ),
                   AppText(text: "loginToContinue", color: AppColors.grey),
 
@@ -65,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: emailController,
                     decoration: InputDecoration(
-                      label: AppText(text: "email"),
+                      label: AppText(text: "email", color: AppColors.grey),
                       fillColor: Colors.white,
                       focusColor: Colors.white,
                       filled: true,
@@ -76,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                           width: 1,
-                          color: AppColors.primary,
+                          color: AppColors.stroke,
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -106,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       fillColor: Colors.white,
                       focusColor: Colors.white,
                       filled: true,
-                      label: AppText(text: "password"),
+                      label: AppText(text: "password", color: AppColors.grey),
                       prefixIcon: Icon(
                         Icons.lock_outline,
                         color: AppColors.primary,
@@ -126,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                           width: 1,
-                          color: AppColors.primary,
+                          color: AppColors.stroke,
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -169,9 +174,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: AppText(
                       text: "login",
                       color: Colors.white,
-                      style: AppTextConstants.subheadingStyle.copyWith(
-                        fontSize: 25,
-                      ),
+                      style: AppTextConstants.subheadingStyle(
+                        context,
+                      ).copyWith(fontSize: 25),
                     ),
                   ),
 
@@ -188,12 +193,31 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         child: AppText(
                           text: "createNewAccount",
-                          style: AppTextConstants.bodyStyle.copyWith(
-                            fontWeight: .w600,
-                          ),
+                          style: AppTextConstants.bodyStyle(
+                            context,
+                          ).copyWith(fontWeight: .w600),
                         ),
                       ),
                     ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  InkWell(
+                    onTap: () {
+                      context.pushReplacement(GuestMainPage());
+                    },
+                    child: AppText(
+                      text: "continueAsGuest",
+                      style: AppTextConstants.bodyStyle(context).copyWith(
+                        fontWeight: .w600,
+                        decoration: TextDecoration.underline,
+                        decorationThickness: 10,
+                        decorationColor: AppColors.accent2,
+                      ),
+                      color: AppColors.accent2,
+                      textAlign: .center,
+                    ),
                   ),
 
                   const SizedBox(height: 20),
