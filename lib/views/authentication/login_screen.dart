@@ -31,7 +31,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
 
                 children: [
-                  Image.asset('assets/icon/logo.png', width: 100, height: 100),
+                  Image.asset(
+                    'assets/icon/logo_shadow.png',
+                    width: 100,
+                    height: 100,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     "Dawak",
@@ -65,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: emailController,
                     decoration: InputDecoration(
-                      label: AppText(text: "email"),
+                      label: AppText(text: "email", color: AppColors.grey),
                       fillColor: Colors.white,
                       focusColor: Colors.white,
                       filled: true,
@@ -76,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                           width: 1,
-                          color: AppColors.primary,
+                          color: AppColors.stroke,
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -106,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       fillColor: Colors.white,
                       focusColor: Colors.white,
                       filled: true,
-                      label: AppText(text: "password"),
+                      label: AppText(text: "password", color: AppColors.grey),
                       prefixIcon: Icon(
                         Icons.lock_outline,
                         color: AppColors.primary,
@@ -126,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                           width: 1,
-                          color: AppColors.primary,
+                          color: AppColors.stroke,
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
