@@ -52,5 +52,7 @@
     "registerNow": "سجل الآن",
     "searchPlaceholder": "البحث",
     "samplePharmacyName": "أطول اسم صيدلية",
-    "samplePharmacyAddress": "العنوان"
+    "samplePharmacyAddress": "العنوان",
+    "loginSignupHeading": "تسجيل الدخول / إنشاء حساب",
+    "loginSignupSubheading": "يجب عليك تسجيل الدخول لعرض تفاصيل ملفك الشخصي"
 }

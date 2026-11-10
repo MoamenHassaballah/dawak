@@ -1,5 +1,7 @@
 import 'package:dawak/views/constants/app_text_constants.dart';
+import 'package:dawak/views/guest/guest_account_page.dart';
 import 'package:dawak/views/guest/guest_home_page.dart';
+import 'package:dawak/views/guest/guest_pharmacies_page.dart';
 import 'package:dawak/views/widgets/app_text.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +15,7 @@ class GuestMainPage extends StatefulWidget {
 
 class _GuestMainPageState extends State<GuestMainPage> {
   int _currentIndex = 0;
-  final screens = [GuestHomePage()];
+  final screens = [GuestHomePage(), GuestPharmaciesPage(), GuestAccountPage()];
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +33,7 @@ class _GuestMainPageState extends State<GuestMainPage> {
         centerTitle: false,
         backgroundColor: Colors.white,
       ),
-      body: screens[0],
+      body: screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         onTap: (value) {
           setState(() {

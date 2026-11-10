@@ -52,5 +52,7 @@
     "registerNow": "Register Now",
     "searchPlaceholder": "Search",
     "samplePharmacyName": "Longest Pharmacy Name",
-    "samplePharmacyAddress": "Address"
+    "samplePharmacyAddress": "Address",
+    "loginSignupHeading": "Login/Signup",
+    "loginSignupSubheading": "You need to login to view your profile details"
 }
