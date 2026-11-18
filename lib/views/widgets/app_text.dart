@@ -1,5 +1,5 @@
-import 'package:dawak/views/constants/app_colors.dart';
-import 'package:dawak/views/constants/app_text_constants.dart';
+import 'package:dawak/views/views_constants/app_colors.dart';
+import 'package:dawak/views/views_constants/app_text_constants.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 

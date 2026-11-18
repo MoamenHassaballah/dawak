@@ -1,4 +1,4 @@
-import 'package:dawak/views/constants/app_text_constants.dart';
+import 'package:dawak/views/views_constants/app_text_constants.dart';
 import 'package:dawak/views/guest/guest_account_page.dart';
 import 'package:dawak/views/guest/guest_home_page.dart';
 import 'package:dawak/views/guest/guest_pharmacies_page.dart';

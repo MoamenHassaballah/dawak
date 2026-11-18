@@ -1,7 +1,7 @@
 import 'package:dawak/extensions/context_ext.dart';
 import 'package:dawak/views/authentication/patient_signup_screen.dart';
-import 'package:dawak/views/constants/app_colors.dart';
-import 'package:dawak/views/constants/app_text_constants.dart';
+import 'package:dawak/views/views_constants/app_colors.dart';
+import 'package:dawak/views/views_constants/app_text_constants.dart';
 import 'package:dawak/views/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 

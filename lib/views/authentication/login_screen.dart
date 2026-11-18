@@ -1,10 +1,14 @@
 import 'package:dawak/extensions/context_ext.dart';
+import 'package:dawak/viewmodels/auth_viewmodel.dart';
 import 'package:dawak/views/authentication/signup_account_selection.dart';
-import 'package:dawak/views/constants/app_colors.dart';
-import 'package:dawak/views/constants/app_text_constants.dart';
 import 'package:dawak/views/guest/guest_main_page.dart';
+import 'package:dawak/views/patient/patient_home_page.dart';
+import 'package:dawak/views/views_constants/app_colors.dart';
+import 'package:dawak/views/views_constants/app_text_constants.dart';
 import 'package:dawak/views/widgets/app_text.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,8 +22,55 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   bool _isSecured = true;
 
+  Future<void> _submitLogin() async {
+    final result = await context.read<AuthViewModel>().login(
+      email: emailController.text,
+      password: passwordController.text,
+    );
+    if (!mounted) {
+      return;
+    }
+
+    if (result.isSuccess) {
+      context.pushAndRemoveUntil(const PatientHomePage(), (route) => false);
+      return;
+    }
+
+    final messageKey = switch (result.failure) {
+      LoginFailure.connection => 'loginConnectionError',
+      LoginFailure.invalidResponse => 'loginInvalidResponse',
+      LoginFailure.invalidCredentials => 'loginInvalidCredentials',
+      LoginFailure.rateLimited => 'loginRateLimited',
+      LoginFailure.storage => 'loginStorageError',
+      _ => 'loginFailed',
+    };
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.tr('loginErrorTitle')),
+        content: Text(context.tr(messageKey)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(context.tr('ok')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLoading = context.watch<AuthViewModel>().isLoading;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(color: AppColors.background),
@@ -162,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: isLoading ? null : _submitLogin,
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadiusGeometry.circular(20),
@@ -171,13 +222,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       fixedSize: Size.fromHeight(50),
                     ),
 
-                    child: AppText(
-                      text: "login",
-                      color: Colors.white,
-                      style: AppTextConstants.subheadingStyle(
-                        context,
-                      ).copyWith(fontSize: 25),
-                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          )
+                        : AppText(
+                            text: "login",
+                            color: Colors.white,
+                            style: AppTextConstants.subheadingStyle(
+                              context,
+                            ).copyWith(fontSize: 25),
+                          ),
                   ),
 
                   const SizedBox(height: 24),

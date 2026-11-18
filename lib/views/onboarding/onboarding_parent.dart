@@ -1,4 +1,5 @@
 import 'package:dawak/extensions/context_ext.dart';
+import 'package:dawak/storage/onboarding_storage.dart';
 import 'package:dawak/views/authentication/login_screen.dart';
 import 'package:dawak/views/onboarding/onboarding_one.dart';
 import 'package:dawak/views/onboarding/onboarding_three.dart';
@@ -17,6 +18,33 @@ class OnboardingParent extends StatefulWidget {
 class _OnboardingParentState extends State<OnboardingParent> {
   final pageController = PageController();
   int _page = 0;
+  bool _isCompleting = false;
+
+  Future<void> _completeOnboarding() async {
+    if (_isCompleting) {
+      return;
+    }
+    setState(() {
+      _isCompleting = true;
+    });
+
+    final saved = await OnboardingStorage.markOnboardingSeen();
+    if (!mounted) {
+      return;
+    }
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('onboardingSaveFailed'))),
+      );
+    }
+    context.pushReplacement(const LoginScreen());
+  }
+
+  @override
+  void dispose() {
+    pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +74,7 @@ class _OnboardingParentState extends State<OnboardingParent> {
           child: IconButton.filled(
             onPressed: () {
               if (_page == 2) {
-                context.pushReplacement(LoginScreen());
+                _completeOnboarding();
                 return;
               }
               pageController.nextPage(
@@ -64,9 +92,7 @@ class _OnboardingParentState extends State<OnboardingParent> {
           end: 30,
           top: 70,
           child: TextButton(
-            onPressed: () {
-              context.pushReplacement(LoginScreen());
-            },
+            onPressed: _completeOnboarding,
             child: AppText(text: "skip"),
           ),
         ),
