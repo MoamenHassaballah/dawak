@@ -32,7 +32,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (result.isSuccess) {
-      context.pushAndRemoveUntil(const PatientHomePage(), (route) => false);
+      if (result.response?.userType == 'patient') {
+        context.pushAndRemoveUntil(const PatientHomePage(), (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('pharmacyHomeComingSoon'))),
+        );
+      }
       return;
     }
 

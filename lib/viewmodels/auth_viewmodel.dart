@@ -136,9 +136,12 @@ class AuthViewModel extends ChangeNotifier {
       }
 
       final userId = loginResponse.userId;
+      final userType = loginResponse.userType;
       final accessToken = loginResponse.accessToken;
       if (userId == null ||
           userId.isEmpty ||
+          userType == null ||
+          userType.isEmpty ||
           accessToken == null ||
           accessToken.isEmpty) {
         return const LoginResult.failure(LoginFailure.invalidResponse);
@@ -149,6 +152,8 @@ class AuthViewModel extends ChangeNotifier {
           accessToken: accessToken,
           refreshToken: loginResponse.refreshToken,
           userId: userId,
+          userType: userType,
+          firstName: loginResponse.firstName,
         );
       } on PlatformException {
         return const LoginResult.failure(LoginFailure.storage);

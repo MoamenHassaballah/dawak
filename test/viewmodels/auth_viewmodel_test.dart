@@ -80,7 +80,14 @@ void main() {
           jsonEncode({
             'success': true,
             'message': 'Login successful.',
-            'user': {'id': 'patient-id', 'email': 'patient@example.com'},
+            'user': {
+              'id': 'patient-id',
+              'email': 'patient@example.com',
+              'user_metadata': {
+                'account_type': 'patient',
+                'full_name': 'Test Patient',
+              },
+            },
             'session': {
               'access_token': 'access-token',
               'refresh_token': 'refresh-token',
@@ -107,6 +114,8 @@ void main() {
       expect(sessionStorage.accessToken, 'access-token');
       expect(sessionStorage.refreshToken, 'refresh-token');
       expect(sessionStorage.userId, 'patient-id');
+      expect(sessionStorage.userType, 'patient');
+      expect(sessionStorage.firstName, 'Test');
     },
   );
 
@@ -131,12 +140,43 @@ void main() {
     expect(result.isSuccess, isFalse);
     expect(result.failure, LoginFailure.invalidCredentials);
   });
+
+  test('login requires account type before saving the session', () async {
+    final sessionStorage = _MemoryAuthSessionStorage();
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'success': true,
+          'user': {'id': 'patient-id'},
+          'session': {'access_token': 'access-token'},
+        }),
+        200,
+      );
+    });
+    final viewModel = AuthViewModel(
+      api: BaseApi(client: client),
+      sessionStorage: sessionStorage,
+    );
+    addTearDown(viewModel.dispose);
+
+    final result = await viewModel.login(
+      email: 'patient@example.com',
+      password: 'password123',
+    );
+
+    expect(result.isSuccess, isFalse);
+    expect(result.failure, LoginFailure.invalidResponse);
+    expect(sessionStorage.userId, isNull);
+    expect(sessionStorage.userType, isNull);
+  });
 }
 
 class _MemoryAuthSessionStorage implements AuthSessionStorage {
   String? accessToken;
   String? refreshToken;
   String? userId;
+  String? userType;
+  String? firstName;
 
   @override
   Future<String?> readAccessToken() async => accessToken;
@@ -148,13 +188,32 @@ class _MemoryAuthSessionStorage implements AuthSessionStorage {
   Future<String?> readUserId() async => userId;
 
   @override
+  Future<String?> readUserType() async => userType;
+
+  @override
+  Future<String?> readFirstName() async => firstName;
+
+  @override
+  Future<void> clearSession() async {
+    accessToken = null;
+    refreshToken = null;
+    userId = null;
+    userType = null;
+    firstName = null;
+  }
+
+  @override
   Future<void> saveSession({
     required String accessToken,
     required String? refreshToken,
     required String userId,
+    required String userType,
+    required String? firstName,
   }) async {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
     this.userId = userId;
+    this.userType = userType;
+    this.firstName = firstName;
   }
 }

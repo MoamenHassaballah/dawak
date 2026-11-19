@@ -7,11 +7,16 @@ abstract interface class AuthSessionStorage {
     required String accessToken,
     required String? refreshToken,
     required String userId,
+    required String userType,
+    required String? firstName,
   });
 
   Future<String?> readAccessToken();
   Future<String?> readRefreshToken();
   Future<String?> readUserId();
+  Future<String?> readUserType();
+  Future<String?> readFirstName();
+  Future<void> clearSession();
 }
 
 class SecureAuthSessionStorage implements AuthSessionStorage {
@@ -27,6 +32,8 @@ class SecureAuthSessionStorage implements AuthSessionStorage {
     required String accessToken,
     required String? refreshToken,
     required String userId,
+    required String userType,
+    required String? firstName,
   }) async {
     await _storage.write(
       key: _sessionKey,
@@ -34,6 +41,8 @@ class SecureAuthSessionStorage implements AuthSessionStorage {
         'accessToken': accessToken,
         'refreshToken': refreshToken,
         'userId': userId,
+        'userType': userType,
+        'firstName': firstName,
       }),
     );
   }
@@ -49,6 +58,17 @@ class SecureAuthSessionStorage implements AuthSessionStorage {
   @override
   Future<String?> readUserId() async =>
       _stringValue((await _readSession())?['userId']);
+
+  @override
+  Future<String?> readUserType() async =>
+      _stringValue((await _readSession())?['userType']);
+
+  @override
+  Future<String?> readFirstName() async =>
+      _stringValue((await _readSession())?['firstName']);
+
+  @override
+  Future<void> clearSession() => _storage.delete(key: _sessionKey);
 
   Future<Map<String, dynamic>?> _readSession() async {
     final value = await _storage.read(key: _sessionKey);
