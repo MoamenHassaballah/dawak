@@ -24,6 +24,24 @@ void main() {
     expect(response.statusCode, 200);
   });
 
+  test('GET sends a JSON body when supplied', () async {
+    final client = MockClient((request) async {
+      expect(request.method, 'GET');
+      expect(request.headers['Content-Type'], 'application/json');
+      expect(jsonDecode(request.body), {'id': 'patient-id'});
+      return http.Response('{}', 200);
+    });
+    final api = BaseApi(client: client);
+    addTearDown(api.close);
+
+    final response = await api.get(
+      '/patient/profile',
+      body: {'id': 'patient-id'},
+    );
+
+    expect(response.statusCode, 200);
+  });
+
   test('POST sends JSON and merges custom headers', () async {
     final requestBody = {'name': 'Patient'};
     final client = MockClient((request) async {
