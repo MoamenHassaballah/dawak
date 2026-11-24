@@ -2,6 +2,7 @@ import 'package:dawak/models/patient_profile.dart';
 import 'package:dawak/viewmodels/patient_viewmodel.dart';
 import 'package:dawak/views/views_constants/app_colors.dart';
 import 'package:dawak/views/views_constants/app_text_constants.dart';
+import 'package:dawak/views/widgets/app_text.dart';
 import 'package:dawak/views/widgets/session_expired_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -33,15 +34,9 @@ class _PatientEditAccountPageState extends State<PatientEditAccountPage> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(
-      text: widget.initialProfile.name,
-    );
-    _emailController = TextEditingController(
-      text: widget.initialProfile.email,
-    );
-    _phoneController = TextEditingController(
-      text: widget.initialProfile.phone,
-    );
+    _nameController = TextEditingController(text: widget.initialProfile.name);
+    _emailController = TextEditingController(text: widget.initialProfile.email);
+    _phoneController = TextEditingController(text: widget.initialProfile.phone);
     _addressController = TextEditingController(
       text: widget.initialProfile.address ?? '',
     );
@@ -81,10 +76,7 @@ class _PatientEditAccountPageState extends State<PatientEditAccountPage> {
       return;
     }
     if (result.failure == PatientProfileFailure.unauthorized) {
-      await showSessionExpiredDialog(
-        context,
-        onLogin: widget.onSessionExpired,
-      );
+      await showSessionExpiredDialog(context, onLogin: widget.onSessionExpired);
       return;
     }
 
@@ -95,9 +87,7 @@ class _PatientEditAccountPageState extends State<PatientEditAccountPage> {
         'profileUnauthorizedError',
       ),
       PatientProfileFailure.forbidden => context.tr('profileForbiddenError'),
-      PatientProfileFailure.missingSession => context.tr(
-        'profileSessionError',
-      ),
+      PatientProfileFailure.missingSession => context.tr('profileSessionError'),
       _ => context.tr('profileSaveFailed'),
     };
     ScaffoldMessenger.of(context).showSnackBar(
@@ -154,46 +144,53 @@ class _PatientEditAccountPageState extends State<PatientEditAccountPage> {
     String? Function(String?)? validator,
     bool readOnly = false,
   }) {
-    return TextFormField(
-      controller: controller,
-      textAlign: TextAlign.end,
-      keyboardType: keyboardType,
-      readOnly: readOnly,
-      style: AppTextConstants.bodyStyle(
-        context,
-      ).copyWith(color: AppColors.primary, fontSize: 15),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: AppTextConstants.bodyStyle(
-          context,
-        ).copyWith(color: AppColors.grey, fontSize: 13),
-        floatingLabelBehavior: FloatingLabelBehavior.never,
-        filled: true,
-        fillColor: Colors.white,
-        suffixIcon: Icon(icon, color: AppColors.grey, size: 18),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: AppColors.stroke),
+    return Column(
+      mainAxisAlignment: .start,
+      crossAxisAlignment: .start,
+      children: [
+        AppText(text: label, color: AppColors.grey),
+        TextFormField(
+          controller: controller,
+          textAlign: TextAlign.start,
+          keyboardType: keyboardType,
+          readOnly: readOnly,
+          style: AppTextConstants.bodyStyle(
+            context,
+          ).copyWith(color: AppColors.primary, fontSize: 15),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: AppTextConstants.bodyStyle(
+              context,
+            ).copyWith(color: AppColors.grey, fontSize: 13),
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            filled: true,
+            fillColor: Colors.white,
+            prefixIcon: Icon(icon, color: AppColors.grey, size: 18),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppColors.stroke),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.redAccent),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.redAccent),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 14,
+            ),
+          ),
+          validator: validator,
+          onTapOutside: (_) => FocusScope.of(context).unfocus(),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: AppColors.primary),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.redAccent),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.redAccent),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 14,
-        ),
-      ),
-      validator: validator,
-      onTapOutside: (_) => FocusScope.of(context).unfocus(),
+      ],
     );
   }
 
@@ -210,147 +207,142 @@ class _PatientEditAccountPageState extends State<PatientEditAccountPage> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: Icon(Icons.edit_outlined, color: AppColors.primary),
+                    icon: Icon(
+                      Icons.arrow_back_ios_outlined,
+                      color: AppColors.primary,
+                    ),
                   ),
-                  const Spacer(),
+
                   Text(
                     context.tr('editPatientProfile'),
                     style: AppTextConstants.subheadingStyle(
                       context,
                     ).copyWith(color: AppColors.primary, fontSize: 22),
                   ),
+                  const Spacer(),
                 ],
               ),
             ),
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(top: 8),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(28, 30, 28, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(child: _avatar()),
-                      const SizedBox(height: 38),
-                      Form(
-                        key: _formKey,
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Column(
-                            children: [
-                              _field(
-                                controller: _emailController,
-                                label: context.tr('email'),
-                                icon: Icons.email_outlined,
-                                keyboardType: TextInputType.emailAddress,
-                                readOnly: true,
-                              ),
-                              const SizedBox(height: 16),
-                              _field(
-                                controller: _nameController,
-                                label: context.tr('name'),
-                                icon: Icons.person_outline,
-                                keyboardType: TextInputType.name,
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return context.tr('nameRequired');
-                                  }
-                                  if (value.trim().length < 3) {
-                                    return context.tr('nameTooShort');
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              _field(
-                                controller: _phoneController,
-                                label: context.tr('phone'),
-                                icon: Icons.phone_outlined,
-                                keyboardType: TextInputType.phone,
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return context.tr('phoneRequired');
-                                  }
-                                  if (!RegExp(
-                                    r'^\+?[0-9]{7,15}$',
-                                  ).hasMatch(value.trim())) {
-                                    return context.tr('phoneInvalid');
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              _field(
-                                controller: _addressController,
-                                label: context.tr('address'),
-                                icon: Icons.location_on_outlined,
-                                keyboardType: TextInputType.streetAddress,
-                              ),
-                            ],
-                          ),
-                        ),
+            SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 30, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(child: _avatar()),
+                  const SizedBox(height: 38),
+                  Form(
+                    key: _formKey,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      const SizedBox(height: 24),
-                      Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () => Navigator.of(context).maybePop(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primary,
-                                elevation: 0,
-                                side: BorderSide(color: AppColors.stroke),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(context.tr('cancel')),
-                            ),
+                          const SizedBox(height: 16),
+                          _field(
+                            controller: _nameController,
+                            label: context.tr('name'),
+                            icon: Icons.person_outline,
+                            keyboardType: TextInputType.name,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return context.tr('nameRequired');
+                              }
+                              if (value.trim().length < 3) {
+                                return context.tr('nameTooShort');
+                              }
+                              return null;
+                            },
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isSaving ? null : _save,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: _isSaving
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Text(context.tr('save')),
-                            ),
+                          const SizedBox(height: 16),
+                          _field(
+                            controller: _phoneController,
+                            label: context.tr('phone'),
+                            icon: Icons.phone_outlined,
+                            keyboardType: TextInputType.phone,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return context.tr('phoneRequired');
+                              }
+                              if (!RegExp(
+                                r'^\+?[0-9]{7,15}$',
+                              ).hasMatch(value.trim())) {
+                                return context.tr('phoneInvalid');
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          _field(
+                            controller: _addressController,
+                            label: context.tr('address'),
+                            icon: Icons.location_on_outlined,
+                            keyboardType: TextInputType.streetAddress,
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: AppColors.primary,
+                            elevation: 0,
+                            side: BorderSide(color: AppColors.stroke),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: AppText(
+                            text: "cancel",
+                            color: AppColors.primary,
+                            style: AppTextConstants.subheadingStyle(
+                              context,
+                            ).copyWith(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _isSaving ? null : _save,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: _isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : AppText(
+                                  text: "save",
+                                  color: Colors.white,
+                                  style: AppTextConstants.subheadingStyle(
+                                    context,
+                                  ).copyWith(fontSize: 18),
+                                ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
           ],

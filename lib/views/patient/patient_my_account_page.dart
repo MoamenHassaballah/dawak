@@ -12,11 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class PatientMyAccountPage extends StatefulWidget {
-  const PatientMyAccountPage({
-    super.key,
-    this.sessionStorage,
-    this.viewModel,
-  });
+  const PatientMyAccountPage({super.key, this.sessionStorage, this.viewModel});
 
   final AuthSessionStorage? sessionStorage;
   final PatientViewModel? viewModel;
@@ -101,10 +97,7 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
       if (!mounted) {
         return;
       }
-      showSessionExpiredDialog(
-        context,
-        onLogin: _handleExpiredSession,
-      );
+      showSessionExpiredDialog(context, onLogin: _handleExpiredSession);
     });
   }
 
@@ -143,9 +136,7 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
         'profileUnauthorizedError',
       ),
       PatientProfileFailure.forbidden => context.tr('profileForbiddenError'),
-      PatientProfileFailure.missingSession => context.tr(
-        'profileSessionError',
-      ),
+      PatientProfileFailure.missingSession => context.tr('profileSessionError'),
       _ => context.tr('profileLoadFailed'),
     };
   }
@@ -222,38 +213,30 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
     return Padding(
       padding: const EdgeInsets.only(top: 14),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: .center,
+            children: [
+              Icon(icon, size: 17, color: AppColors.grey),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: AppTextConstants.bodyStyle(
+                  context,
+                ).copyWith(color: AppColors.grey, fontSize: 13),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
           Text(
-            label,
+            value,
+            textAlign: TextAlign.end,
             style: AppTextConstants.bodyStyle(
               context,
-            ).copyWith(color: AppColors.grey, fontSize: 13),
-          ),
-          const SizedBox(height: 5),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Text(
-                    value,
-                    textAlign: TextAlign.end,
-                    style: AppTextConstants.bodyStyle(
-                      context,
-                    ).copyWith(color: AppColors.primary, fontSize: 15),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(icon, size: 17, color: AppColors.grey),
-              ],
-            ),
+            ).copyWith(color: AppColors.primary, fontSize: 15),
           ),
         ],
       ),
@@ -273,12 +256,12 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.chevron_left, size: 20, color: AppColors.grey),
+            Icon(icon, size: 18, color: titleColor ?? AppColors.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 title,
-                textAlign: TextAlign.end,
+                textAlign: TextAlign.start,
                 style: AppTextConstants.bodyStyle(context).copyWith(
                   color: titleColor ?? AppColors.primary,
                   fontSize: 15,
@@ -286,7 +269,12 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
               ),
             ),
             const SizedBox(width: 10),
-            Icon(icon, size: 18, color: titleColor ?? AppColors.primary),
+
+            Icon(
+              Icons.arrow_forward_ios_outlined,
+              size: 20,
+              color: AppColors.grey,
+            ),
           ],
         ),
       ),
@@ -327,7 +315,8 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: .start,
         children: [
           Text(
             context.tr('myAccount'),
@@ -363,9 +352,18 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
                       context,
                     ).copyWith(color: AppColors.primary, fontSize: 14),
                   ),
+                  iconAlignment: .end,
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            context.tr('personalInformation'),
+            textAlign: TextAlign.end,
+            style: AppTextConstants.subheadingStyle(
+              context,
+            ).copyWith(color: AppColors.primary, fontSize: 17),
           ),
           const SizedBox(height: 12),
           Container(
@@ -376,25 +374,21 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: .start,
               children: [
-                Text(
-                  context.tr('personalInformation'),
-                  textAlign: TextAlign.end,
-                  style: AppTextConstants.subheadingStyle(
-                    context,
-                  ).copyWith(color: AppColors.primary, fontSize: 17),
-                ),
                 _profileDetail(
                   icon: Icons.email_outlined,
                   label: context.tr('email'),
                   value: profile.email,
                 ),
+                Divider(),
                 _profileDetail(
                   icon: Icons.phone_outlined,
                   label: context.tr('phone'),
                   value: profile.phone,
                 ),
+                Divider(),
                 _profileDetail(
                   icon: Icons.location_on_outlined,
                   label: context.tr('address'),
@@ -403,7 +397,15 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+          Text(
+            context.tr('securityAndPrivacy'),
+            textAlign: TextAlign.end,
+            style: AppTextConstants.subheadingStyle(
+              context,
+            ).copyWith(color: AppColors.primary, fontSize: 17),
+          ),
+          const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -412,37 +414,40 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.tr('securityAndPrivacy'),
-                  textAlign: TextAlign.end,
-                  style: AppTextConstants.subheadingStyle(
-                    context,
-                  ).copyWith(color: AppColors.primary, fontSize: 17),
-                ),
                 const SizedBox(height: 8),
                 _actionRow(
                   icon: Icons.email_outlined,
                   title: context.tr('changeEmail'),
                   onTap: () {},
                 ),
+                const SizedBox(height: 8),
                 const Divider(height: 1),
+                const SizedBox(height: 8),
                 _actionRow(
                   icon: Icons.lock_outline,
                   title: context.tr('changePassword'),
                   onTap: () {},
                 ),
-                const Divider(height: 1),
-                _actionRow(
-                  icon: Icons.logout,
-                  title: _isSigningOut
-                      ? context.tr('signOut')
-                      : context.tr('signOut'),
-                  titleColor: Colors.red,
-                  onTap: _isSigningOut ? () {} : _signOut,
-                ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: _actionRow(
+              icon: Icons.logout,
+              title: _isSigningOut
+                  ? context.tr('signOut')
+                  : context.tr('signOut'),
+              titleColor: Colors.red,
+              onTap: _isSigningOut ? () {} : _signOut,
             ),
           ),
         ],
