@@ -125,6 +125,93 @@ void main() {
   });
 
   test(
+    'profile PATCH prefers valid field errors over the general message',
+    () async {
+      final client = MockClient((_) async {
+        return http.Response(
+          jsonEncode({
+            'success': false,
+            'message': 'Invalid profile data.',
+            'errors': [
+              {
+                'origin': 'string',
+                'code': 'invalid_format',
+                'format': 'regex',
+                'pattern': r'/^01[0125][0-9]{8}$/',
+                'path': ['phone'],
+                'message': 'Invalid Egyptian phone number',
+              },
+              {'message': '  Address is invalid.  '},
+              {'message': ''},
+              {'message': 42},
+            ],
+          }),
+          422,
+        );
+      });
+      final viewModel = PatientViewModel(
+        api: BaseApi(client: client),
+        sessionStorage: _MemoryAuthSessionStorage(),
+      );
+      addTearDown(viewModel.dispose);
+
+      final result = await viewModel.updateProfile(
+        currentProfile: const PatientProfile(
+          name: 'Test Patient',
+          email: 'test@gmail.com',
+          phone: '1234567890',
+        ),
+        name: 'Test Patient',
+        phone: '1234567890',
+        address: '',
+      );
+
+      expect(result.failure, PatientProfileFailure.server);
+      expect(
+        result.message,
+        'Invalid Egyptian phone number\nAddress is invalid.',
+      );
+    },
+  );
+
+  test(
+    'profile errors fall back to the general message without valid details',
+    () async {
+      final client = MockClient((_) async {
+        return http.Response(
+          jsonEncode({
+            'success': false,
+            'message': 'Invalid profile data.',
+            'errors': [
+              {'message': '  '},
+              {'message': 42},
+            ],
+          }),
+          422,
+        );
+      });
+      final viewModel = PatientViewModel(
+        api: BaseApi(client: client),
+        sessionStorage: _MemoryAuthSessionStorage(),
+      );
+      addTearDown(viewModel.dispose);
+
+      final result = await viewModel.updateProfile(
+        currentProfile: const PatientProfile(
+          name: 'Test Patient',
+          email: 'test@gmail.com',
+          phone: '1234567890',
+        ),
+        name: 'Test Patient',
+        phone: '1234567890',
+        address: '',
+      );
+
+      expect(result.message, 'Invalid profile data.');
+    },
+  );
+
+  test(
     'profile GET distinguishes forbidden access from an expired session',
     () async {
       final client = MockClient((_) async {

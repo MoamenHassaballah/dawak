@@ -192,9 +192,25 @@ class PatientViewModel extends ChangeNotifier {
     }
     try {
       final decoded = jsonDecode(body);
-      if (decoded is Map<String, dynamic> && decoded['message'] is String) {
-        final message = (decoded['message'] as String).trim();
-        return message.isEmpty ? null : message;
+      if (decoded is Map<String, dynamic>) {
+        final errors = decoded['errors'];
+        if (errors is List) {
+          final messages = errors
+              .whereType<Map<String, dynamic>>()
+              .map((error) => error['message'])
+              .whereType<String>()
+              .map((message) => message.trim())
+              .where((message) => message.isNotEmpty)
+              .toList();
+          if (messages.isNotEmpty) {
+            return messages.join('\n');
+          }
+        }
+
+        if (decoded['message'] is String) {
+          final message = (decoded['message'] as String).trim();
+          return message.isEmpty ? null : message;
+        }
       }
     } on FormatException {
       return null;
