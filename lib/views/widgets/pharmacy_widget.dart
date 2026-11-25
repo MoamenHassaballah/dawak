@@ -4,7 +4,11 @@ import 'package:dawak/views/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 
 class PharmacyWidget extends StatelessWidget {
-  const PharmacyWidget({super.key});
+  const PharmacyWidget({super.key, this.name, this.address, this.phone});
+
+  final String? name;
+  final String? address;
+  final String? phone;
 
   @override
   Widget build(BuildContext context) {
@@ -28,15 +32,17 @@ class PharmacyWidget extends StatelessWidget {
         spacing: 10,
         children: [
           Expanded(
+            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText(
-                  text: "samplePharmacyName",
+                  text: name ?? "samplePharmacyName",
                   style: AppTextConstants.headingStyle(
                     context,
                   ).copyWith(fontSize: 18),
                   maxLines: 2,
+                  translate: name == null,
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -51,10 +57,11 @@ class PharmacyWidget extends StatelessWidget {
                     const SizedBox(width: 8),
                     Flexible(
                       child: AppText(
-                        text: "samplePharmacyAddress",
+                        text: address ?? "samplePharmacyAddress",
                         style: AppTextConstants.bodyStyle(
                           context,
                         ).copyWith(fontSize: 16),
+                        translate: address == null,
                       ),
                     ),
                   ],
@@ -71,7 +78,7 @@ class PharmacyWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     AppText(
-                      text: "01000000000",
+                      text: phone ?? "01000000000",
                       translate: false,
                       style: AppTextConstants.bodyStyle(
                         context,
@@ -83,6 +90,7 @@ class PharmacyWidget extends StatelessWidget {
             ),
           ),
           Expanded(
+            flex: 2,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(22),
               child: Container(

@@ -1,6 +1,7 @@
 import 'package:dawak/views/views_constants/app_colors.dart';
 import 'package:dawak/views/views_constants/app_text_constants.dart';
 import 'package:dawak/views/patient/patient_my_account_page.dart';
+import 'package:dawak/views/patient/patient_pharmacies_page.dart';
 import 'package:dawak/views/patient/patient_request_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,9 @@ class _PatientHomePageState extends State<PatientHomePage> {
       body: SafeArea(
         child: switch (_currentIndex) {
           0 => const PatientRequestPage(),
+          1 => PatientPharmaciesPage(
+            onBack: () => setState(() => _currentIndex = 0),
+          ),
           3 => const PatientMyAccountPage(),
           _ => const SizedBox.shrink(),
         },

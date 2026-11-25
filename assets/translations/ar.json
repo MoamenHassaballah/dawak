@@ -68,6 +68,7 @@
     "searchPlaceholder": "البحث",
     "samplePharmacyName": "أطول اسم صيدلية",
     "samplePharmacyAddress": "العنوان",
+    "noPharmaciesFound": "لا توجد صيدليات مطابقة لبحثك",
     "loginSignupHeading": "تسجيل الدخول / إنشاء حساب",
     "loginSignupSubheading": "يجب عليك تسجيل الدخول لعرض تفاصيل ملفك الشخصي",
     "requestsHistory": "سجل الطلبات",
