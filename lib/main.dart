@@ -4,10 +4,17 @@ import 'package:dawak/viewmodels/auth_viewmodel.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://mmdufssxglpvtoqiokpj.supabase.co',
+    publishableKey: 'sb_publishable_yptyLvF1nElwUcLmZeEe2Q_5HfiVFPX',
+  );
+
   runApp(
     EasyLocalization(
       supportedLocales: [Locale('en'), Locale('ar')],
@@ -18,6 +25,8 @@ Future<void> main() async {
     ),
   );
 }
+
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

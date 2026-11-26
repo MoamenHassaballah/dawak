@@ -96,10 +96,6 @@ class _PatientPharmaciesPageState extends State<PatientPharmaciesPage> {
                 ).copyWith(fontSize: 24),
               ),
               const Spacer(),
-              IconButton(
-                onPressed: widget.onBack,
-                icon: Icon(Icons.arrow_back, color: AppColors.primary),
-              ),
             ],
           ),
           const SizedBox(height: 8),

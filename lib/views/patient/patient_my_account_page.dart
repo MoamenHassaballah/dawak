@@ -5,6 +5,7 @@ import 'package:dawak/views/authentication/login_screen.dart';
 import 'package:dawak/views/patient/patient_edit_account_page.dart';
 import 'package:dawak/views/views_constants/app_colors.dart';
 import 'package:dawak/views/views_constants/app_text_constants.dart';
+import 'package:dawak/views/widgets/app_text.dart';
 import 'package:dawak/views/widgets/session_expired_dialog.dart';
 import 'package:dawak/viewmodels/patient_viewmodel.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -122,6 +123,73 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
     setState(() => _profile = result);
   }
 
+  Future<void> _openEmailUpdateSheet() async {
+    final profile = _profile;
+    if (profile == null) {
+      return;
+    }
+
+    final updatedProfile = await showModalBottomSheet<PatientProfile>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => _ChangeEmailBottomSheet(
+        initialEmail: profile.email,
+        onUpdate: (email) => _patientViewModel.updateEmail(email: email),
+        onSessionExpired: _handleExpiredSession,
+      ),
+    );
+
+    if (!mounted || updatedProfile == null) {
+      return;
+    }
+    setState(() => _profile = updatedProfile);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.tr('emailUpdateSuccess'))));
+  }
+
+  Future<void> _openPasswordUpdateSheet() async {
+    final didUpdate = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => _ChangePasswordBottomSheet(
+        onUpdate: (currentPassword, newPassword) =>
+            _patientViewModel.updatePassword(
+              currentPassword: currentPassword,
+              newPassword: newPassword,
+            ),
+        onSessionExpired: _handleExpiredSession,
+      ),
+    );
+
+    if (!mounted || didUpdate != true) {
+      return;
+    }
+    await _showPasswordUpdatedDialog();
+  }
+
+  Future<void> _showPasswordUpdatedDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: AppText(text: 'passwordUpdatedTitle'),
+        content: AppText(text: 'passwordUpdatedRelogin'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _signOut();
+            },
+            child: AppText(text: 'ok'),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _failureMessage(PatientProfileResult result) {
     if (result.failure == PatientProfileFailure.unauthorized) {
       return context.tr('profileUnauthorizedError');
@@ -165,7 +233,7 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
     );
   }
 
-  Widget _profileIcon({double size = 88}) {
+  Widget _profileIcon({double size = 88, String? imageUrl}) {
     return SizedBox(
       width: size,
       height: size,
@@ -173,31 +241,26 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
         clipBehavior: Clip.none,
         children: [
           Container(
+            clipBehavior: .hardEdge,
             width: size,
             height: size,
             decoration: BoxDecoration(
               color: AppColors.decoration,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.decoration, width: 7),
+              border: Border.all(color: AppColors.decoration, width: 5),
             ),
-            child: Icon(Icons.person, color: Colors.white, size: size * 0.55),
-          ),
-          Positioned(
-            right: -3,
-            bottom: -2,
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primary, width: 1),
-              ),
-              child: Icon(
-                Icons.edit_outlined,
-                size: 16,
-                color: AppColors.primary,
-              ),
+            child: Image.network(
+              "$imageUrl?t=${DateTime.now().millisecondsSinceEpoch}",
+              fit: .cover,
+              loadingBuilder: (context, child, _) => ClipOval(child: child),
+              errorBuilder: (context, url, error) {
+                debugPrint("error loading image: ${error.toString()}");
+                return Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: size * 0.55,
+                );
+              },
             ),
           ),
         ],
@@ -329,7 +392,7 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
           Center(
             child: Column(
               children: [
-                _profileIcon(size: 96),
+                _profileIcon(size: 150, imageUrl: profile.img),
                 const SizedBox(height: 12),
                 Text(
                   profile.name,
@@ -420,7 +483,7 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
                 _actionRow(
                   icon: Icons.email_outlined,
                   title: context.tr('changeEmail'),
-                  onTap: () {},
+                  onTap: _openEmailUpdateSheet,
                 ),
                 const SizedBox(height: 8),
                 const Divider(height: 1),
@@ -428,7 +491,7 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
                 _actionRow(
                   icon: Icons.lock_outline,
                   title: context.tr('changePassword'),
-                  onTap: () {},
+                  onTap: _openPasswordUpdateSheet,
                 ),
               ],
             ),
@@ -451,6 +514,446 @@ class _PatientMyAccountPageState extends State<PatientMyAccountPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ChangeEmailBottomSheet extends StatefulWidget {
+  const _ChangeEmailBottomSheet({
+    required this.initialEmail,
+    required this.onUpdate,
+    required this.onSessionExpired,
+  });
+
+  final String initialEmail;
+  final Future<PatientProfileResult> Function(String email) onUpdate;
+  final Future<void> Function() onSessionExpired;
+
+  @override
+  State<_ChangeEmailBottomSheet> createState() =>
+      _ChangeEmailBottomSheetState();
+}
+
+class _ChangeEmailBottomSheetState extends State<_ChangeEmailBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _emailController;
+  bool _isSaving = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_isSaving || !(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+      _errorMessage = null;
+    });
+    final result = await widget.onUpdate(_emailController.text.trim());
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isSaving = false);
+
+    if (result.isSuccess && result.profile != null) {
+      Navigator.of(context).pop(result.profile);
+      return;
+    }
+
+    if (result.failure == PatientProfileFailure.unauthorized) {
+      await showSessionExpiredDialog(context, onLogin: widget.onSessionExpired);
+      return;
+    }
+
+    final message = result.message?.trim();
+    setState(() {
+      _errorMessage = message?.isNotEmpty == true
+          ? message
+          : switch (result.failure) {
+              PatientProfileFailure.connection => context.tr(
+                'profileConnectionError',
+              ),
+              PatientProfileFailure.unauthorized => context.tr(
+                'profileUnauthorizedError',
+              ),
+              PatientProfileFailure.forbidden => context.tr(
+                'profileForbiddenError',
+              ),
+              PatientProfileFailure.missingSession => context.tr(
+                'profileSessionError',
+              ),
+              _ => context.tr('profileSaveFailed'),
+            };
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.tr('changeEmail'),
+                  style: AppTextConstants.subheadingStyle(
+                    context,
+                  ).copyWith(color: AppColors.primary, fontSize: 20),
+                ),
+                const SizedBox(height: 18),
+                TextFormField(
+                  controller: _emailController,
+                  autofocus: true,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('email'),
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return context.tr('emailRequired');
+                    }
+                    if (!RegExp(
+                      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                    ).hasMatch(value.trim())) {
+                      return context.tr('emailInvalid');
+                    }
+                    return null;
+                  },
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _errorMessage!,
+                    style: AppTextConstants.bodyStyle(
+                      context,
+                    ).copyWith(color: Colors.red),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadiusGeometry.circular(8),
+                          ),
+                        ),
+                        onPressed: _isSaving
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: AppText(text: 'cancel'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadiusGeometry.circular(8),
+                          ),
+                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: AppText(
+                                  text: "save",
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChangePasswordBottomSheet extends StatefulWidget {
+  const _ChangePasswordBottomSheet({
+    required this.onUpdate,
+    required this.onSessionExpired,
+  });
+
+  final Future<PatientPasswordResult> Function(
+    String currentPassword,
+    String newPassword,
+  )
+  onUpdate;
+  final Future<void> Function() onSessionExpired;
+
+  @override
+  State<_ChangePasswordBottomSheet> createState() =>
+      _ChangePasswordBottomSheetState();
+}
+
+class _ChangePasswordBottomSheetState
+    extends State<_ChangePasswordBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  bool _isSaving = false;
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_isSaving || !(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+      _errorMessage = null;
+    });
+    final result = await widget.onUpdate(
+      _currentPasswordController.text,
+      _newPasswordController.text,
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isSaving = false);
+
+    if (result.isSuccess) {
+      Navigator.of(context).pop(true);
+      return;
+    }
+
+    if (result.failure == PatientProfileFailure.unauthorized) {
+      await showSessionExpiredDialog(context, onLogin: widget.onSessionExpired);
+      return;
+    }
+
+    final message = result.message?.trim();
+    setState(() {
+      _errorMessage = message?.isNotEmpty == true
+          ? message
+          : switch (result.failure) {
+              PatientProfileFailure.connection => context.tr(
+                'profileConnectionError',
+              ),
+              PatientProfileFailure.forbidden => context.tr(
+                'profileForbiddenError',
+              ),
+              PatientProfileFailure.missingSession => context.tr(
+                'profileSessionError',
+              ),
+              _ => context.tr('profileSaveFailed'),
+            };
+    });
+  }
+
+  Widget _passwordField({
+    required TextEditingController controller,
+    required String label,
+    required bool obscureText,
+    required TextInputAction textInputAction,
+    required VoidCallback onToggleObscure,
+    required String? Function(String?) validator,
+  }) {
+    final fontFamily = context.locale == const Locale('ar')
+        ? 'Tajawal'
+        : 'Poppins';
+    final textStyle = AppTextConstants.bodyStyle(
+      context,
+    ).copyWith(fontFamily: fontFamily);
+
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: TextInputType.visiblePassword,
+      textInputAction: textInputAction,
+      style: textStyle,
+      decoration: InputDecoration(
+        labelText: context.tr(label),
+        labelStyle: textStyle,
+        errorStyle: textStyle.copyWith(color: Colors.red),
+        prefixIcon: const Icon(Icons.lock_outline),
+        suffixIcon: IconButton(
+          onPressed: onToggleObscure,
+          icon: Icon(
+            obscureText
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+          ),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      validator: validator,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppText(
+                  text: 'changePassword',
+                  style: AppTextConstants.subheadingStyle(
+                    context,
+                  ).copyWith(fontSize: 20),
+                ),
+                const SizedBox(height: 18),
+                _passwordField(
+                  controller: _currentPasswordController,
+                  label: 'currentPassword',
+                  obscureText: _obscureCurrentPassword,
+                  textInputAction: TextInputAction.next,
+                  onToggleObscure: () => setState(
+                    () => _obscureCurrentPassword = !_obscureCurrentPassword,
+                  ),
+                  validator: (value) => value == null || value.isEmpty
+                      ? context.tr('currentPasswordRequired')
+                      : null,
+                ),
+                const SizedBox(height: 14),
+                _passwordField(
+                  controller: _newPasswordController,
+                  label: 'newPassword',
+                  obscureText: _obscureNewPassword,
+                  textInputAction: TextInputAction.done,
+                  onToggleObscure: () => setState(
+                    () => _obscureNewPassword = !_obscureNewPassword,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return context.tr('newPasswordRequired');
+                    }
+                    if (value.length < 8) {
+                      return context.tr('passwordTooShort');
+                    }
+                    return null;
+                  },
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  AppText(
+                    text: _errorMessage!,
+                    translate: false,
+                    color: Colors.red,
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _isSaving
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadiusGeometry.circular(10),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: AppText(text: 'cancel'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadiusGeometry.circular(10),
+                          ),
+                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: AppText(
+                                  text: 'save',
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 50),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

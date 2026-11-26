@@ -5,6 +5,7 @@ class PatientProfile {
     required this.phone,
     this.img,
     this.address,
+    this.lastModified,
   });
 
   factory PatientProfile.fromResponse(Object? json) {
@@ -13,7 +14,8 @@ class PatientProfile {
     }
 
     final data = json['data'];
-    final profile = switch (data) {
+    final profileData = data is Map<String, dynamic> ? data['patient'] ?? data : data;
+    final profile = switch (profileData) {
       List values when values.isNotEmpty => values.first,
       Map<String, dynamic> value => value,
       _ => null,
@@ -31,6 +33,7 @@ class PatientProfile {
       phone: _requiredString(profile, 'phone'),
       img: _optionalString(profile, 'img'),
       address: _optionalString(profile, 'address'),
+      lastModified: _optionalString(profile, 'last_modified'),
     );
   }
 
@@ -39,18 +42,23 @@ class PatientProfile {
   final String phone;
   final String? img;
   final String? address;
+  final String? lastModified;
 
   PatientProfile copyWith({
     String? name,
+    String? email,
     String? phone,
     String? address,
+    String? img,
+    String? lastModified,
   }) {
     return PatientProfile(
       name: name ?? this.name,
-      email: email,
+      email: email ?? this.email,
       phone: phone ?? this.phone,
-      img: img,
+      img: img ?? this.img,
       address: address ?? this.address,
+      lastModified: lastModified ?? this.lastModified,
     );
   }
 }

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dawak/models/patient_profile.dart';
 import 'package:dawak/viewmodels/patient_viewmodel.dart';
 import 'package:dawak/views/views_constants/app_colors.dart';
@@ -6,6 +9,8 @@ import 'package:dawak/views/widgets/app_text.dart';
 import 'package:dawak/views/widgets/session_expired_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 class PatientEditAccountPage extends StatefulWidget {
   const PatientEditAccountPage({
@@ -29,6 +34,9 @@ class _PatientEditAccountPageState extends State<PatientEditAccountPage> {
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
   late final TextEditingController _addressController;
+  final _imagePicker = ImagePicker();
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageContentType;
   bool _isSaving = false;
 
   @override
@@ -65,6 +73,8 @@ class _PatientEditAccountPageState extends State<PatientEditAccountPage> {
       name: _nameController.text,
       phone: _phoneController.text,
       address: _addressController.text,
+      profileImageBytes: _selectedImageBytes,
+      profileImageContentType: _selectedImageContentType,
     );
     if (!mounted) {
       return;
@@ -97,41 +107,113 @@ class _PatientEditAccountPageState extends State<PatientEditAccountPage> {
     );
   }
 
-  Widget _avatar() {
-    return SizedBox(
-      width: 124,
-      height: 124,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 124,
-            height: 124,
-            decoration: BoxDecoration(
-              color: const Color(0x4085BFC8),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.person, color: Colors.white, size: 72),
-          ),
-          Positioned(
-            right: 5,
-            bottom: 8,
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primary, width: 1),
+  Future<void> _selectProfileImage() async {
+    try {
+      final image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+        requestFullMetadata: false,
+      );
+      if (image == null) {
+        return;
+      }
+
+      final imageBytes = await image.readAsBytes();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _selectedImageBytes = imageBytes;
+        _selectedImageContentType = image.mimeType;
+      });
+    } on PlatformException {
+      _showImageSelectionError();
+    } on FileSystemException {
+      _showImageSelectionError();
+    }
+  }
+
+  void _showImageSelectionError() {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.tr('profileImagePickFailed'))),
+    );
+  }
+
+  Widget _avatar({int size = 88}) {
+    return Tooltip(
+      message: context.tr('selectProfileImage'),
+      child: InkWell(
+        onTap: _selectProfileImage,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 124,
+          height: 124,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 150,
+                height: 150,
+                decoration: const BoxDecoration(
+                  color: Color(0x4085BFC8),
+                  shape: BoxShape.circle,
+                ),
+                child: ClipOval(
+                  child: _selectedImageBytes == null
+                      ? Image.network(
+                          "${widget.initialProfile.img}?t=${DateTime.now().millisecondsSinceEpoch}",
+                          key: ValueKey(widget.initialProfile.lastModified),
+                          fit: .cover,
+                          loadingBuilder: (context, child, _) =>
+                              ClipOval(child: child),
+                          errorBuilder: (context, url, error) {
+                            debugPrint(
+                              "error loading image: ${error.toString()}",
+                            );
+                            return Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: size * 0.55,
+                            );
+                          },
+                        )
+                      : Image.memory(
+                          _selectedImageBytes!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.broken_image_outlined,
+                            color: Colors.white,
+                            size: 72,
+                          ),
+                        ),
+                ),
               ),
-              child: Icon(
-                Icons.edit_outlined,
-                size: 19,
-                color: AppColors.primary,
+              Positioned(
+                right: 5,
+                bottom: 8,
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 1),
+                  ),
+                  child: Icon(
+                    Icons.edit_outlined,
+                    size: 19,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

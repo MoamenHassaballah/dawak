@@ -7,6 +7,7 @@ import 'package:dawak/storage/auth_session_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum PatientProfileFailure {
   missingSession,
@@ -33,13 +34,32 @@ class PatientProfileResult {
   final String? message;
 }
 
-class PatientViewModel extends ChangeNotifier {
-  PatientViewModel({BaseApi? api, AuthSessionStorage? sessionStorage})
-    : _api = api ?? BaseApi(),
-      _sessionStorage = sessionStorage ?? SecureAuthSessionStorage();
+class PatientPasswordResult {
+  const PatientPasswordResult.success({this.message})
+    : isSuccess = true,
+      failure = null;
 
+  const PatientPasswordResult.failure(this.failure, {this.message})
+    : isSuccess = false;
+
+  final bool isSuccess;
+  final PatientProfileFailure? failure;
+  final String? message;
+}
+
+class PatientViewModel extends ChangeNotifier {
+  PatientViewModel({
+    BaseApi? api,
+    AuthSessionStorage? sessionStorage,
+    SupabaseClient? client,
+  }) : _api = api ?? BaseApi(),
+       _sessionStorage = sessionStorage ?? SecureAuthSessionStorage(),
+       _supabaseClient = client;
+
+  static const _profileImageBucket = 'patient_images';
   final BaseApi _api;
   final AuthSessionStorage _sessionStorage;
+  final SupabaseClient? _supabaseClient;
   bool _isLoading = false;
 
   bool get isLoading => _isLoading;
@@ -92,6 +112,8 @@ class PatientViewModel extends ChangeNotifier {
     required String name,
     required String phone,
     required String address,
+    Uint8List? profileImageBytes,
+    String? profileImageContentType,
   }) async {
     if (_isLoading) {
       return const PatientProfileResult.failure(PatientProfileFailure.server);
@@ -106,10 +128,19 @@ class PatientViewModel extends ChangeNotifier {
         );
       }
 
+      final imageUrl = profileImageBytes == null
+          ? currentProfile.img
+          : await _uploadProfileImage(
+              userId: credentials.userId,
+              accessToken: credentials.accessToken,
+              imageBytes: profileImageBytes,
+              contentType: profileImageContentType,
+            );
       final updatedProfile = currentProfile.copyWith(
         name: name.trim(),
         phone: phone.trim(),
         address: address.trim(),
+        img: imageUrl,
       );
       final response = await _api.patch(
         ApiEndpoints.patientProfile,
@@ -118,6 +149,7 @@ class PatientViewModel extends ChangeNotifier {
           'name': updatedProfile.name,
           'phone': updatedProfile.phone,
           'address': updatedProfile.address,
+          'img': updatedProfile.img,
         },
       );
       if (!_isSuccessfulStatus(response.statusCode)) {
@@ -149,19 +181,189 @@ class PatientViewModel extends ChangeNotifier {
         PatientProfile.fromResponse(body),
         message: _messageFromBody(response.body),
       );
-    } on PlatformException {
+    } on StorageException catch (error) {
+      debugPrint(
+        'Profile image upload failed (${error.statusCode}): ${error.message}',
+      );
+      return PatientProfileResult.failure(
+        PatientProfileFailure.server,
+        message: error.message,
+      );
+    } on PlatformException catch (error) {
+      debugPrint('Could not read patient session: $error');
       return const PatientProfileResult.failure(PatientProfileFailure.storage);
-    } on http.ClientException {
+    } on http.ClientException catch (error) {
+      debugPrint('Patient profile request failed: $error');
       return const PatientProfileResult.failure(
         PatientProfileFailure.connection,
       );
-    } on FormatException {
+    } on FormatException catch (error) {
+      debugPrint('Patient profile update returned invalid data: $error');
       return const PatientProfileResult.failure(
         PatientProfileFailure.invalidResponse,
       );
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<PatientProfileResult> updateEmail({
+    required String email,
+  }) async {
+    if (_isLoading) {
+      return const PatientProfileResult.failure(PatientProfileFailure.server);
+    }
+
+    _setLoading(true);
+    try {
+      final credentials = await _readCredentials();
+      if (credentials == null) {
+        return const PatientProfileResult.failure(
+          PatientProfileFailure.missingSession,
+        );
+      }
+
+      final response = await _api.patch(
+        ApiEndpoints.patientProfileEmail,
+        headers: {'Authorization': 'Bearer ${credentials.accessToken}'},
+        body: {'email': email.trim()},
+      );
+      if (!_isSuccessfulStatus(response.statusCode)) {
+        return _failureForResponse(response);
+      }
+
+      final body = jsonDecode(response.body);
+      if (body is! Map<String, dynamic>) {
+        return const PatientProfileResult.failure(
+          PatientProfileFailure.invalidResponse,
+        );
+      }
+      if (body['success'] != true) {
+        return PatientProfileResult.failure(
+          PatientProfileFailure.server,
+          message: _messageFromBody(response.body),
+        );
+      }
+
+      return PatientProfileResult.success(
+        PatientProfile.fromResponse(body),
+        message: _messageFromBody(response.body),
+      );
+    } on PlatformException catch (error) {
+      debugPrint('Could not read patient session: $error');
+      return const PatientProfileResult.failure(PatientProfileFailure.storage);
+    } on http.ClientException catch (error) {
+      debugPrint('Patient email update request failed: $error');
+      return const PatientProfileResult.failure(
+        PatientProfileFailure.connection,
+      );
+    } on FormatException catch (error) {
+      debugPrint('Patient email update returned invalid data: $error');
+      return const PatientProfileResult.failure(
+        PatientProfileFailure.invalidResponse,
+      );
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<PatientPasswordResult> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    if (_isLoading) {
+      return const PatientPasswordResult.failure(
+        PatientProfileFailure.server,
+      );
+    }
+
+    _setLoading(true);
+    try {
+      final credentials = await _readCredentials();
+      if (credentials == null) {
+        return const PatientPasswordResult.failure(
+          PatientProfileFailure.missingSession,
+        );
+      }
+
+      final response = await _api.patch(
+        ApiEndpoints.patientProfilePassword,
+        headers: {'Authorization': 'Bearer ${credentials.accessToken}'},
+        body: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+      );
+      final message = _messageFromBody(response.body);
+      if (!_isSuccessfulStatus(response.statusCode)) {
+        return PatientPasswordResult.failure(
+          switch (response.statusCode) {
+            401 => PatientProfileFailure.unauthorized,
+            403 => PatientProfileFailure.forbidden,
+            _ => PatientProfileFailure.server,
+          },
+          message: message,
+        );
+      }
+
+      final body = jsonDecode(response.body);
+      if (body is! Map<String, dynamic>) {
+        return const PatientPasswordResult.failure(
+          PatientProfileFailure.invalidResponse,
+        );
+      }
+      if (body['success'] != true) {
+        return PatientPasswordResult.failure(
+          PatientProfileFailure.server,
+          message: message,
+        );
+      }
+
+      return PatientPasswordResult.success(message: message);
+    } on PlatformException catch (error) {
+      debugPrint('Could not read patient session: $error');
+      return const PatientPasswordResult.failure(
+        PatientProfileFailure.storage,
+      );
+    } on http.ClientException catch (error) {
+      debugPrint('Patient password update request failed: $error');
+      return const PatientPasswordResult.failure(
+        PatientProfileFailure.connection,
+      );
+    } on FormatException catch (error) {
+      debugPrint('Patient password update returned invalid data: $error');
+      return const PatientPasswordResult.failure(
+        PatientProfileFailure.invalidResponse,
+      );
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<String> _uploadProfileImage({
+    required String userId,
+    required String accessToken,
+    required Uint8List imageBytes,
+    required String? contentType,
+  }) async {
+    debugPrint('Uploading profile image to Supabase Storage.');
+    final storage = (_supabaseClient ?? Supabase.instance.client).storage;
+    storage.setAuth(accessToken);
+
+    final imageStorage = storage.from(_profileImageBucket);
+    await imageStorage.uploadBinary(
+      userId,
+      imageBytes,
+      fileOptions: FileOptions(
+        cacheControl: '0',
+        contentType: contentType ?? 'image/jpeg',
+        upsert: true,
+      ),
+    );
+
+    final url = imageStorage.getPublicUrl(userId);
+    debugPrint('Profile image uploaded to Supabase Storage: $url');
+    return url;
   }
 
   Future<_PatientCredentials?> _readCredentials() async {
