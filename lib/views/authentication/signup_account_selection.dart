@@ -1,5 +1,6 @@
 import 'package:dawak/extensions/context_ext.dart';
 import 'package:dawak/views/authentication/patient_signup_screen.dart';
+import 'package:dawak/views/authentication/pharmacy_signup_screen.dart';
 import 'package:dawak/views/views_constants/app_colors.dart';
 import 'package:dawak/views/views_constants/app_text_constants.dart';
 import 'package:dawak/views/widgets/app_text.dart';
@@ -125,43 +126,48 @@ class SignupAccountSelection extends StatelessWidget {
 
                       const SizedBox(height: 16),
 
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: AppColors.stroke),
-                        ),
-                        padding: EdgeInsets.all(24),
-                        child: Row(
-                          spacing: 24,
-                          children: [
-                            Image.asset(
-                              "assets/images/pharmacy.png",
-                              width: 69,
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: .start,
-                                children: [
-                                  AppText(
-                                    text: "pharmacy",
-                                    style: AppTextConstants.subheadingStyle(
-                                      context,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  AppText(
-                                    text: "pharmacyDesc",
-                                    color: AppColors.grey,
-                                    style: AppTextConstants.bodyStyle(
-                                      context,
-                                    ).copyWith(fontSize: 15),
-                                    maxLines: 2,
-                                  ),
-                                ],
+                      InkWell(
+                        onTap: () {
+                          context.push(const PharmacySignupScreen());
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(color: AppColors.stroke),
+                          ),
+                          padding: const EdgeInsets.all(24),
+                          child: Row(
+                            spacing: 24,
+                            children: [
+                              Image.asset(
+                                "assets/images/pharmacy.png",
+                                width: 69,
                               ),
-                            ),
-                          ],
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: .start,
+                                  children: [
+                                    AppText(
+                                      text: "pharmacy",
+                                      style: AppTextConstants.subheadingStyle(
+                                        context,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    AppText(
+                                      text: "pharmacyDesc",
+                                      color: AppColors.grey,
+                                      style: AppTextConstants.bodyStyle(
+                                        context,
+                                      ).copyWith(fontSize: 15),
+                                      maxLines: 2,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
 

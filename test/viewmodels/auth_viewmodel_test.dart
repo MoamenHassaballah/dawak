@@ -66,6 +66,45 @@ void main() {
   });
 
   test(
+    'pharmacy signup sends address coordinates and returns the server message',
+    () async {
+      final client = MockClient((request) async {
+        expect(request.url.path, '/auth/pharmacy/signup');
+        expect(request.method, 'POST');
+        expect(jsonDecode(request.body), {
+          'email': 'pharmacy@example.com',
+          'phone': '0123456789',
+          'password': 'password123',
+          'pharmacyName': 'Test Pharmacy',
+          'latitude': '12.22',
+          'longitude': '30.4343',
+          'address': 'Pharmacy address',
+        });
+        return http.Response(
+          jsonEncode({'success': true, 'message': 'Signup successful.'}),
+          201,
+        );
+      });
+      final viewModel = AuthViewModel(api: BaseApi(client: client));
+      addTearDown(viewModel.dispose);
+
+      final result = await viewModel.signupPharmacy(
+        email: ' pharmacy@example.com ',
+        phone: '0123456789',
+        password: 'password123',
+        pharmacyName: 'Test Pharmacy',
+        latitude: 12.22,
+        longitude: 30.4343,
+        address: 'Pharmacy address',
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.message, 'Signup successful.');
+      expect(viewModel.isLoading, isFalse);
+    },
+  );
+
+  test(
     'login saves the required session data and returns the minimal model',
     () async {
       final sessionStorage = _MemoryAuthSessionStorage();
@@ -118,6 +157,46 @@ void main() {
       expect(sessionStorage.firstName, 'Test');
     },
   );
+
+  test('pharmacy login persists pharmacy session data', () async {
+    final sessionStorage = _MemoryAuthSessionStorage();
+    final client = MockClient((_) async {
+      return http.Response(
+        jsonEncode({
+          'success': true,
+          'user': {
+            'id': 'pharmacy-id',
+            'user_metadata': {
+              'account_type': 'pharmacy',
+              'full_name': 'Test Pharmacy',
+            },
+          },
+          'session': {
+            'access_token': 'pharmacy-access-token',
+            'refresh_token': 'pharmacy-refresh-token',
+          },
+        }),
+        200,
+      );
+    });
+    final viewModel = AuthViewModel(
+      api: BaseApi(client: client),
+      sessionStorage: sessionStorage,
+    );
+    addTearDown(viewModel.dispose);
+
+    final result = await viewModel.login(
+      email: 'pharmacy@example.com',
+      password: 'password123',
+    );
+
+    expect(result.isSuccess, isTrue);
+    expect(sessionStorage.userId, 'pharmacy-id');
+    expect(sessionStorage.userType, 'pharmacy');
+    expect(sessionStorage.accessToken, 'pharmacy-access-token');
+    expect(sessionStorage.refreshToken, 'pharmacy-refresh-token');
+    expect(sessionStorage.firstName, 'Test');
+  });
 
   test('login treats an echoed request body as invalid credentials', () async {
     final client = MockClient((_) async {

@@ -2,6 +2,7 @@ import 'package:dawak/extensions/context_ext.dart';
 import 'package:dawak/viewmodels/auth_viewmodel.dart';
 import 'package:dawak/views/authentication/signup_account_selection.dart';
 import 'package:dawak/views/guest/guest_main_page.dart';
+import 'package:dawak/views/pharmacy/pharmacy_home_page.dart';
 import 'package:dawak/views/patient/patient_home_page.dart';
 import 'package:dawak/views/views_constants/app_colors.dart';
 import 'package:dawak/views/views_constants/app_text_constants.dart';
@@ -32,8 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (result.isSuccess) {
-      if (result.response?.userType == 'patient') {
-        context.pushAndRemoveUntil(const PatientHomePage(), (route) => false);
+      final homePage = switch (result.response?.userType) {
+        'patient' => const PatientHomePage(),
+        'pharmacy' => const PharmacyHomePage(),
+        _ => null,
+      };
+      if (homePage != null) {
+        context.pushAndRemoveUntil(homePage, (route) => false);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.tr('pharmacyHomeComingSoon'))),

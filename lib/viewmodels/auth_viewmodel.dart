@@ -55,6 +55,44 @@ class AuthViewModel extends ChangeNotifier {
     required String phone,
     required String password,
     required String fullName,
+  }) {
+    return _signup(
+      endpoint: ApiEndpoints.patientSignup,
+      body: {
+        'email': email.trim(),
+        'phone': phone.trim(),
+        'password': password,
+        'fullName': fullName.trim(),
+      },
+    );
+  }
+
+  Future<SignupResult> signupPharmacy({
+    required String email,
+    required String phone,
+    required String password,
+    required String pharmacyName,
+    required double latitude,
+    required double longitude,
+    required String address,
+  }) {
+    return _signup(
+      endpoint: ApiEndpoints.pharmacySignup,
+      body: {
+        'email': email.trim(),
+        'phone': phone.trim(),
+        'password': password,
+        'pharmacyName': pharmacyName.trim(),
+        'latitude': latitude.toString(),
+        'longitude': longitude.toString(),
+        'address': address.trim(),
+      },
+    );
+  }
+
+  Future<SignupResult> _signup({
+    required String endpoint,
+    required Map<String, String> body,
   }) async {
     if (_isLoading) {
       return const SignupResult.failure(SignupFailure.unknown);
@@ -64,15 +102,7 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _api.post(
-        ApiEndpoints.patientSignup,
-        body: {
-          'email': email.trim(),
-          'phone': phone.trim(),
-          'password': password,
-          'fullName': fullName.trim(),
-        },
-      );
+      final response = await _api.post(endpoint, body: body);
       final decodedBody = jsonDecode(response.body);
       if (decodedBody is! Map<String, dynamic>) {
         return const SignupResult.failure(SignupFailure.invalidResponse);
